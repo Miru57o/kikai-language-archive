@@ -90,7 +90,7 @@ class LanguageRecord(models.Model):
     
     # ファイル情報
     file_type = models.CharField(max_length=10, choices=FILE_TYPE_CHOICES, verbose_name="ファイル種類")
-    file_path = models.URLField(max_length=1024, verbose_name="ファイルURL")
+    file_path = models.URLField(max_length=1024, null=True, blank=True, verbose_name="ファイルURL")
     thumbnail_path = models.URLField(max_length=1024, blank=True, verbose_name="サムネイルURL")
     
     # 関連情報
@@ -123,7 +123,7 @@ class GeographicRecord(models.Model):
     
     title = models.CharField(max_length=200, verbose_name="タイトル")
     content_type = models.CharField(max_length=20, choices=CONTENT_TYPE_CHOICES, verbose_name="コンテンツ種類")
-    file_path = models.URLField(max_length=1024, verbose_name="ファイルURL")
+    file_path = models.URLField(max_length=1024,null=True, blank=True, verbose_name="ファイルURL")
     thumbnail_path = models.URLField(max_length=1024, blank=True, verbose_name="サムネイルURL")
     
     description = models.TextField(verbose_name="説明")
