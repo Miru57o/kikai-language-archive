@@ -75,6 +75,7 @@ class LanguageRecord(models.Model):
     ]
     
     FREQUENCY_CHOICES = [
+        ('','未選択'),
         ('daily', '日常的に使用'),
         ('often', 'よく使用'),
         ('sometimes', 'たまに使用'),
@@ -85,7 +86,7 @@ class LanguageRecord(models.Model):
     meaning = models.TextField(verbose_name="意味")
     usage_example = models.TextField(verbose_name="用例")
     phonetic_notation = models.TextField(blank=True, verbose_name="音声記号")
-    language_frequency = models.CharField(max_length=20, choices=FREQUENCY_CHOICES, verbose_name="言語使用頻度")
+    language_frequency = models.CharField(blank=True, default='', max_length=20, choices=FREQUENCY_CHOICES, verbose_name="言語使用頻度")
     
     # ファイル情報
     file_type = models.CharField(max_length=10, choices=FILE_TYPE_CHOICES, verbose_name="ファイル種類")
