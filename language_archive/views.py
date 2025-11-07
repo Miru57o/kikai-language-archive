@@ -109,37 +109,50 @@ def upload_geographic_record(request):
         
         if form.is_valid():
             file = request.FILES.get('file')
+            youtube_url = form.cleaned_data.get('youtube_url')
             
-            if file:
-                try:
-                    record = form.save(commit=False)
-                    
-                    # 位置情報処理を追加
-                    lat = form.cleaned_data.get('latitude')
-                    lon = form.cleaned_data.get('longitude')
-                    village = form.cleaned_data.get('village')
+            try:
+                record = form.save(commit=False)
+                
+                # 位置情報処理
+                lat = form.cleaned_data.get('latitude')
+                lon = form.cleaned_data.get('longitude')
+                village = form.cleaned_data.get('village')
 
-                    if lat and lon:
-                        record.latitude = lat
-                        record.longitude = lon
-                    elif village:
-                        record.latitude = village.latitude
-                        record.longitude = village.longitude
+                if lat and lon:
+                    record.latitude = lat
+                    record.longitude = lon
+                elif village:
+                    record.latitude = village.latitude
+                    record.longitude = village.longitude
 
+                # YouTube URLが入力されている場合
+                if youtube_url:
+                    record.youtube_url = youtube_url
+                    record.file_path = None  # ファイルパスをクリア
+                    messages.success(request, '地理環境データをYouTube URLで登録しました。')
+                
+                # ファイルがアップロードされている場合
+                elif file:
                     # Supabaseにアップロード
                     content_type = form.cleaned_data['content_type']
                     bucket_name = get_bucket_name(content_type)
                     public_url = upload_to_supabase(file, bucket_name, f"geographic/{content_type}/")
                     
                     record.file_path = public_url
-                    record.save()
-                    
+                    record.youtube_url = None  # YouTube URLをクリア
                     messages.success(request, '地理環境データをアップロードしました。')
-                    return redirect('geographic_list')
-                except Exception as e:
-                    messages.error(request, f'アップロードエラー: {str(e)}')
-            else:
-                messages.error(request, 'ファイルを選択してください。')
+                
+                record.save()
+                return redirect('geographic_list')
+                
+            except Exception as e:
+                messages.error(request, f'エラー: {str(e)}')
+        else:
+            # フォームエラーを表示
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{error}')
     else:
         form = GeographicRecordForm()
         
@@ -147,7 +160,6 @@ def upload_geographic_record(request):
     villages = Village.objects.all().values('id', 'name', 'latitude', 'longitude')
     context = {'form': form, 'villages_data': list(villages)}
     return render(request, 'language_archive/upload_geographic.html', context)
-
 
 def record_list(request):
     """言語記録一覧"""

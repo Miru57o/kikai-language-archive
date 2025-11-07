@@ -19,6 +19,16 @@
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         margin-bottom: 2rem;
     }
+
+    /* Leafletポップアップのカスタマイズ */
+    .leaflet-popup-content-wrapper {
+        border-radius: 12px;
+    }
+
+    .leaflet-popup-content {
+        margin: 15px;
+        max-width: 400px !important;
+    }
 </style>
 {% endblock %}
 
@@ -86,14 +96,14 @@
                     window.location.href = button.href;
                 });
             });
-            // 言語記録詳細ボタンの処理
+            // 地理データ詳細ボタンの処理
             const geographicButtons = document.querySelectorAll('.geographic-detail-btn');
             geographicButtons.forEach(function (button) {
                 setupMobileButtonHandling(button, function () {
                     window.open(button.href, '_blank');
                 });
             });
-        }, 1000); 
+        }, 1000);
 
         // タッチイベントとクリックイベントの両方を処理する関数
         function setupMobileButtonHandling(button, action) {

@@ -125,17 +125,52 @@ def create_archive_map(geographic_records, speakers):
         content_type_map = {'drone_video': 'ドローン映像', 'drone_photo': 'ドローン画像', 'other':'その他地理データ'}
         content_type_display = content_type_map.get(record.content_type, '地理データ')
 
-        popup_html = f"""
-        <div style="min-width: 200px;">
-            <h5><i class="fas fa-camera" style="color: blue;"></i> {record.title}</h5>
-            <p style="margin-bottom: 10px;"><i class="fas fa-map-marker-alt"></i> {record.village.name if record.village else '不明な集落'}</p>
-            <p><strong>説明:</strong> {record.description}</p>
-            <hr style="margin: 5px 0;">
-            <a href="{record.file_path}" target="_blank" class="btn btn-sm btn-info geographic-detail-btn" 
-               onclick="event.stopPropagation(); return true;" 
-               ontouchend="event.stopPropagation(); return true;">表示する</a>
-        </div>
-        """
+        if record.youtube_url:
+            # YouTube動画の場合 
+            popup_html = f"""
+            <div style="min-width: 250px;">
+                <h5 style="margin-bottom: 10px;">
+                    <i class="fab fa-youtube" style="color: red;"></i> {record.title}
+                </h5>
+                <p style="margin-bottom: 10px;">
+                    <i class="fas fa-map-marker-alt"></i> {record.village.name if record.village else '不明な集落'}
+                </p>
+                <p style="font-size: 0.9em; margin-bottom: 15px;">
+                    <strong>説明:</strong> {record.description[:100]}{'...' if len(record.description) > 100 else ''}
+                </p>
+                <p style="font-size: 0.85em; color: #666; margin-bottom: 10px;">
+                    <i class="fas fa-info-circle"></i> YouTubeで動画を視聴できます
+                </p>
+                <a href="{record.youtube_url}" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   class="btn btn-sm btn-danger" 
+                   style="display: inline-block; width: 100%; text-align: center; padding: 10px; background-color: #dc3545; color: white; text-decoration: none; border-radius: 5px; font-weight: 500;"
+                   onclick="event.stopPropagation(); return true;" 
+                   ontouchend="event.stopPropagation(); return true;">
+                    <i class="fab fa-youtube"></i> YouTubeで開く
+                </a>
+            </div>
+            """
+        else:
+            # 通常ファイルの場合
+            popup_html = f"""
+            <div style="min-width: 200px;">
+                <h5><i class="fas fa-camera" style="color: blue;"></i> {record.title}</h5>
+                <p style="margin-bottom: 10px;"><i class="fas fa-map-marker-alt"></i> {record.village.name if record.village else '不明な集落'}</p>
+                <p style="font-size: 0.9em; margin-bottom: 15px;"><strong>説明:</strong> {record.description}</p>
+                <a href="{record.file_path}" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   class="btn btn-sm btn-info geographic-detail-btn" 
+                   style="display: inline-block; width: 100%; text-align: center; padding: 10px; background-color: #17a2b8; color: white; text-decoration: none; border-radius: 5px;"
+                   onclick="event.stopPropagation(); return true;" 
+                   ontouchend="event.stopPropagation(); return true;">
+                    <i class="fas fa-external-link-alt"></i> 表示する
+                </a>
+            </div>
+            """
+        
         marker = folium.Marker(
             location=[record.latitude, record.longitude],
             popup=folium.Popup(popup_html, max_width=300),
@@ -155,9 +190,14 @@ def create_archive_map(geographic_records, speakers):
                 <hr style="margin: 5px 0;">
                 <p style="margin-bottom: 10px;"><i class="fas fa-map-marker-alt"></i> {speaker.village.name}</p>
                 
-                <a href="{detail_url}" class="btn btn-sm btn-light speaker-detail-btn" target="_top" 
+                <a href="{detail_url}" 
+                   class="btn btn-sm btn-light speaker-detail-btn" 
+                   target="_top" 
+                   style="display: inline-block; width: 100%; text-align: center; padding: 10px; background-color: #f8f9fa; color: #212529; text-decoration: none; border: 1px solid #dee2e6; border-radius: 5px;"
                    onclick="event.stopPropagation(); return true;" 
-                   ontouchend="event.stopPropagation(); return true;">この話者の記録を見る</a>
+                   ontouchend="event.stopPropagation(); return true;">
+                    <i class="fas fa-arrow-right"></i> この話者の記録を見る
+                </a>
             </div>
             """
             marker = folium.Marker(

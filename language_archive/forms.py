@@ -89,7 +89,15 @@ class LanguageRecordForm(forms.ModelForm):
 
 class GeographicRecordForm(forms.ModelForm):
     """地理環境データアップロードフォーム"""
-    file = forms.FileField(label="ファイル", required=True)
+    file = forms.FileField(label="ファイル", required=False)  # ファイルは任意に変更
+    youtube_url = forms.URLField(
+        label="YouTube URL", 
+        required=False,
+        widget=forms.URLInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'https://www.youtube.com/watch?v=...'
+        })
+    )
 
     # --- カスタム初期化メソッドで必須Selectフィールドの設定 ---
     def __init__(self, *args, **kwargs):
@@ -112,11 +120,26 @@ class GeographicRecordForm(forms.ModelForm):
             raise forms.ValidationError("コンテンツ種類を選択してください。")
         return data
     
+    def clean(self):
+        cleaned_data = super().clean()
+        file = cleaned_data.get('file')
+        youtube_url = cleaned_data.get('youtube_url')
+        
+        # ファイルまたはYouTube URLのどちらかが必須
+        if not file and not youtube_url:
+            raise forms.ValidationError("ファイルまたはYouTube URLのいずれかを入力してください。")
+        
+        # 両方入力されている場合はエラー
+        if file and youtube_url:
+            raise forms.ValidationError("ファイルとYouTube URLの両方は指定できません。どちらか一方を選択してください。")
+        
+        return cleaned_data
+    
     class Meta:
         model = GeographicRecord
         fields = [
             'title', 'content_type', 'description', 'village',
-            'latitude', 'longitude', 'captured_date'
+            'latitude', 'longitude', 'captured_date', 'youtube_url'
         ]
         widgets = {
             'title': forms.TextInput(attrs={
@@ -151,7 +174,7 @@ class SpeakerForm(forms.ModelForm):
         widgets = {
             'speaker_id': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': '話者IDを入力（例: SPK001）'
+                'placeholder': '話者IDを入力(例: SPK001)'
             }),
             'age_range': forms.TextInput(attrs={
                 'class': 'form-control',

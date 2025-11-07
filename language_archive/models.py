@@ -1,4 +1,5 @@
 # language_archive/models.py
+# Create your models here.
 
 from django.db import models
 from django.utils import timezone
@@ -123,8 +124,9 @@ class GeographicRecord(models.Model):
     
     title = models.CharField(max_length=200, verbose_name="タイトル")
     content_type = models.CharField(max_length=20, choices=CONTENT_TYPE_CHOICES, verbose_name="コンテンツ種類")
-    file_path = models.URLField(max_length=1024,null=True, blank=True, verbose_name="ファイルURL")
+    file_path = models.URLField(max_length=1024, null=True, blank=True, verbose_name="ファイルURL")
     thumbnail_path = models.URLField(max_length=1024, blank=True, verbose_name="サムネイルURL")
+    youtube_url = models.URLField(max_length=1024, null=True, blank=True, verbose_name="YouTube URL")
     
     description = models.TextField(verbose_name="説明")
     village = models.ForeignKey(Village, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="集落")
@@ -141,4 +143,23 @@ class GeographicRecord(models.Model):
     
     def __str__(self):
         return self.title
-# Create your models here.
+    
+    def get_youtube_embed_url(self):
+        """YouTube URLを埋め込み用URLに変換"""
+        if not self.youtube_url:
+            return None
+        
+        import re
+        patterns = [
+            r'(?:https?://)?(?:www\.)?youtube\.com/watch\?v=([a-zA-Z0-9_-]+)', # Standard URL
+            r'(?:https?://)?(?:www\.)?youtu\.be/([a-zA-Z0-9_-]+)', # Shortened URL
+            r'(?:https?://)?(?:www\.)?youtube\.com/embed/([a-zA-Z0-9_-]+)', # Embed URL
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, self.youtube_url)
+            if match:
+                video_id = match.group(1)
+                return f"https://www.youtube-nocookie.com/embed/{video_id}?rel=0&modestbranding=1"
+        
+        return None
