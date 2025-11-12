@@ -18,7 +18,7 @@ def index(request):
     """トップページ"""
     # 統計情報を取得
     total_records = LanguageRecord.objects.count()
-    total_villages = LanguageRecord.objects.filter(speaker__village__isnull=False).values('speaker__village').distinct().count()
+    total_villages = Speaker.objects.filter(village__isnull=False).values('village').distinct().count()
     total_speakers = Speaker.objects.count()
     
     # 最近の言語記録
