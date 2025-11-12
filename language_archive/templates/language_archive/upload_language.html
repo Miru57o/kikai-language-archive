@@ -103,85 +103,81 @@
                             <label for="{{ form.onomatopoeia_type.id_for_label }}" class="form-label">オノマトペ型</label>
                             {{ form.onomatopoeia_type }}
                         </div>
+                    </div>
 
-                        <div class="mb-3">
-                            <label for="{{ form.meaning.id_for_label }}" class="form-label required-label">意味</label>
-                            {{ form.meaning }}
-                            {% if form.meaning.errors %}
-                            <div class="text-danger small">{{ form.meaning.errors|striptags }}</div>
+                    <div class="mb-3">
+                        <label for="{{ form.meaning.id_for_label }}" class="form-label required-label">意味</label>
+                        {{ form.meaning }}
+                        {% if form.meaning.errors %}
+                        <div class="text-danger small">{{ form.meaning.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.usage_example.id_for_label }}" class="form-label required-label">用例</label>
+                        {{ form.usage_example }}
+                        {% if form.usage_example.errors %}
+                        <div class="text-danger small">{{ form.usage_example.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.language_frequency.id_for_label }}" class="form-label">言語使用頻度</label>
+                            {{ form.language_frequency }}
+                            {% if form.language_frequency.errors %}
+                            <div class="text-danger small">{{ form.language_frequency.errors|striptags }}</div>
                             {% endif %}
                         </div>
+                    </div>
 
-                        <div class="mb-3">
-                            <label for="{{ form.usage_example.id_for_label }}"
-                                class="form-label required-label">用例</label>
-                            {{ form.usage_example }}
-                            {% if form.usage_example.errors %}
-                            <div class="text-danger small">{{ form.usage_example.errors|striptags }}</div>
-                            {% endif %}
-                        </div>
+                    <div class="mb-3">
+                        <label for="{{ form.phonetic_notation.id_for_label }}" class="form-label">音声記号（オプション）</label>
+                        {{ form.phonetic_notation }}
+                        <small class="form-text text-muted">IPA表記などを記入してください</small>
 
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="{{ form.language_frequency.id_for_label }}"
-                                    class="form-label">言語使用頻度</label>
-                                {{ form.language_frequency }}
-                                {% if form.language_frequency.errors %}
-                                <div class="text-danger small">{{ form.language_frequency.errors|striptags }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="{{ form.phonetic_notation.id_for_label }}"
-                                class="form-label">音声記号（オプション）</label>
-                            {{ form.phonetic_notation }}
-                            <small class="form-text text-muted">IPA表記などを記入してください</small>
-
-                            <div class="mt-2">
-                                <a href="https://ipa.typeit.org/" target="_blank" rel="noopener noreferrer"
-                                    class="small">
-                                    <i class="fas fa-external-link-alt"></i> IPA入力補助サイトはこちら
-                                </a>
-                            </div>
-                        </div>
-
-                        <!-- 関連情報 -->
-                        <h5 class="mt-4 mb-3">関連情報</h5>
-
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="{{ form.speaker.id_for_label }}"
-                                    class="form-label required-label">話者</label>
-                                {{ form.speaker }}
-                                {% if form.speaker.errors %}
-                                <div class="text-danger small">{{ form.speaker.errors|striptags }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="{{ form.recorded_date.id_for_label }}"
-                                    class="form-label required-label">収録日</label>
-                                {{ form.recorded_date }}
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="{{ form.notes.id_for_label }}" class="form-label">備考（オプション）</label>
-                            {{ form.notes }}
-                        </div>
-
-                        <!-- 送信ボタン -->
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="fas fa-upload"></i> アップロード
-                            </button>
-                            <a href="{% url 'record_list' %}" class="btn btn-secondary">
-                                <i class="fas fa-times"></i> キャンセル
+                        <div class="mt-2">
+                            <a href="https://ipa.typeit.org/" target="_blank" rel="noopener noreferrer" class="small">
+                                <i class="fas fa-external-link-alt"></i> IPA入力補助サイトはこちら
                             </a>
                         </div>
+                    </div>
+
+                    <!-- 関連情報 -->
+                    <h5 class="mt-4 mb-3">関連情報</h5>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.speaker.id_for_label }}" class="form-label required-label">話者</label>
+                            {{ form.speaker }}
+                            {% if form.speaker.errors %}
+                            <div class="text-danger small">{{ form.speaker.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.recorded_date.id_for_label }}"
+                                class="form-label required-label">収録日</label>
+                            {{ form.recorded_date }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.notes.id_for_label }}" class="form-label">備考（オプション）</label>
+                        {{ form.notes }}
+                    </div>
+
+                    <!-- 送信ボタン -->
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-upload"></i> アップロード
+                        </button>
+                        <a href="{% url 'record_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> キャンセル
+                        </a>
+                    </div>
                 </form>
             </div>
         </div>

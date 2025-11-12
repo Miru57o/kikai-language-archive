@@ -33,9 +33,16 @@
         }
 
         body {
-            background-color: var(--bg-color);
             color: var(--text-color);
             font-family: 'Noto Sans JP', sans-serif;
+            background-image: url("{% static 'language_archive/images/background.jpg' %}");
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            position: relative;
         }
 
         h1,
@@ -77,9 +84,22 @@
         }
 
         .content-wrapper {
-            padding: 2.5rem 0;
-            background-color: var(--bg-color);
+        padding: 2.5rem 0 4rem 0; 
+        flex: 1 1 auto;
+        background: rgba(255, 255, 255, 0.75) !important;
+        position: relative;
+        z-index: 1;
         }
+
+        .footer {
+        flex-shrink: 0;
+        background-color: var(--accent-dark); 
+        color: rgba(255, 255, 255, 0.8);
+        padding: 2.5rem 0;
+        margin-top: 0; 
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }   
 
         .card {
             border: 1px solid var(--border-color);
@@ -143,13 +163,6 @@
 
         .bg-secondary {
             background-color: var(--accent-dark) !important;
-        }
-
-        .footer {
-            background-color: var(--accent-dark);
-            color: rgba(255, 255, 255, 0.8);
-            padding: 2.5rem 0;
-            margin-top: 4rem;
         }
 
         .breadcrumb-item a {
