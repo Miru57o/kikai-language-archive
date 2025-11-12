@@ -31,6 +31,12 @@
         border-color: var(--accent-color);
     }
 
+    .file-upload-area.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
     .form-label {
         font-weight: 600;
         color: var(--text-dark);
@@ -41,11 +47,22 @@
         color: #dc3545;
     }
 
-    #map-preview {
-        height: 300px;
-        width: 100%;
+    .upload-option {
+        border: 2px solid #dee2e6;
         border-radius: 10px;
-        margin-top: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s;
+    }
+
+    .upload-option.active {
+        border-color: var(--primary-color);
+        background-color: rgba(28, 155, 142, 0.05);
+    }
+
+    .option-radio {
+        transform: scale(1.2);
+        margin-right: 0.5rem;
     }
 </style>
 {% endblock %}
@@ -54,8 +71,8 @@
 <div class="container">
     <div class="row mb-4">
         <div class="col-12">
-            <h1 class="mb-3">地理環境データのアップロード</h1>
-            <p class="lead">ドローン空撮映像などの地理環境ファイルを登録します</p>
+            <h1 class="mb-3">地理環境データの<br class="d-md-none">アップロード</h1>
+            <p class="lead">ドローン空撮映像などの地理環境ファイルまたはYouTube URLを登録します</p>
         </div>
     </div>
 
@@ -65,8 +82,36 @@
                 <form method="post" enctype="multipart/form-data" id="uploadForm">
                     {% csrf_token %}
 
+                    <!-- アップロード方法の選択 -->
                     <div class="mb-4">
-                        <label class="form-label required-label">
+                        <label class="form-label required-label">アップロード方法を選択</label>
+
+                        <div class="upload-option" id="fileOption">
+                            <div class="form-check">
+                                <input class="form-check-input option-radio" type="radio" name="uploadMethod"
+                                    id="uploadMethodFile" value="file" checked>
+                                <label class="form-check-label" for="uploadMethodFile">
+                                    <strong>ファイルをアップロード</strong>
+                                    <p class="small text-muted mb-0">コンピュータからファイルを直接アップロードします</p>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="upload-option" id="youtubeOption">
+                            <div class="form-check">
+                                <input class="form-check-input option-radio" type="radio" name="uploadMethod"
+                                    id="uploadMethodYoutube" value="youtube">
+                                <label class="form-check-label" for="uploadMethodYoutube">
+                                    <strong>YouTube URLを入力</strong>
+                                    <p class="small text-muted mb-0">YouTubeにアップロード済みの動画URLを使用します</p>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ファイルアップロードエリア -->
+                    <div class="mb-4" id="fileUploadSection">
+                        <label class="form-label">
                             <i class="fas fa-file-upload"></i> ファイル
                         </label>
                         <div class="file-upload-area" id="fileUploadArea"
@@ -77,8 +122,30 @@
                             <p class="small text-muted">対応形式: 映像(mp4, mov), 画像(jpg, png)</p>
                             <p class="small text-danger"><strong>※ファイル名は半角英数字、ハイフン(-)、アンダースコア(_)のみにしてください</strong></p>
                         </div>
-                        <input type="file" name="file" id="id_file" class="d-none" required>
+                        <input type="file" name="file" id="id_file" class="d-none">
                         <div id="fileInfo" class="mt-2"></div>
+                    </div>
+
+                    <!-- YouTube URL入力エリア -->
+                    <div class="mb-4" id="youtubeUrlSection" style="display: none;">
+                        <label for="id_youtube_url" class="form-label">
+                            <i class="fab fa-youtube"></i> YouTube URL
+                        </label>
+                        {{ form.youtube_url }}
+                        <small class="form-text text-muted d-block mt-2">
+                            <i class="fas fa-info-circle"></i>
+                            対応フォーマット: https://www.youtube.com/watch?v=... または https://youtu.be/...
+                        </small>
+                        <div id="youtubePreview" class="mt-3" style="display: none;">
+                            <p class="small text-success mb-2">
+                                <i class="fas fa-check-circle"></i> プレビュー
+                            </p>
+                            <div class="ratio ratio-16x9">
+                                <iframe id="youtubeIframe" src="" frameborder="0" loading="lazy"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="row mb-3">
@@ -98,7 +165,7 @@
                         <label for="{{ form.description.id_for_label }}" class="form-label required-label">説明</label>
                         {{ form.description }}
                     </div>
-                    
+
                     <div class="col-md-6">
                         <label for="{{ form.village.id_for_label }}" class="form-label required-label">集落</label>
                         {{ form.village }}
@@ -149,7 +216,50 @@
     const fileInput = document.getElementById('id_file');
     const fileUploadArea = document.getElementById('fileUploadArea');
     const fileInfo = document.getElementById('fileInfo');
+    const youtubeUrlInput = document.getElementById('id_youtube_url');
+    const youtubePreview = document.getElementById('youtubePreview');
+    const youtubeIframe = document.getElementById('youtubeIframe');
+    const fileUploadSection = document.getElementById('fileUploadSection');
+    const youtubeUrlSection = document.getElementById('youtubeUrlSection');
+    const uploadMethodFile = document.getElementById('uploadMethodFile');
+    const uploadMethodYoutube = document.getElementById('uploadMethodYoutube');
+    const fileOption = document.getElementById('fileOption');
+    const youtubeOption = document.getElementById('youtubeOption');
 
+    // アップロード方法の切り替え
+    function switchUploadMethod(method) {
+        if (method === 'file') {
+            fileUploadSection.style.display = 'block';
+            youtubeUrlSection.style.display = 'none';
+            fileInput.removeAttribute('disabled');
+            youtubeUrlInput.value = '';
+            youtubePreview.style.display = 'none';
+            fileOption.classList.add('active');
+            youtubeOption.classList.remove('active');
+        } else if (method === 'youtube') {
+            fileUploadSection.style.display = 'none';
+            youtubeUrlSection.style.display = 'block';
+            fileInput.value = '';
+            fileInfo.innerHTML = '';
+            fileUploadArea.style.background = '';
+            fileUploadArea.style.borderColor = '';
+            fileOption.classList.remove('active');
+            youtubeOption.classList.add('active');
+        }
+    }
+
+    uploadMethodFile.addEventListener('change', function () {
+        if (this.checked) switchUploadMethod('file');
+    });
+
+    uploadMethodYoutube.addEventListener('change', function () {
+        if (this.checked) switchUploadMethod('youtube');
+    });
+
+    // 初期状態の設定
+    fileOption.classList.add('active');
+
+    // ファイル選択処理
     fileInput.addEventListener('change', function (e) {
         const file = e.target.files[0];
         if (file) {
@@ -189,6 +299,40 @@
 
         fileUploadArea.style.background = 'rgba(40, 167, 69, 0.1)';
         fileUploadArea.style.borderColor = '#28a745';
+    }
+
+    // YouTube URLのプレビュー 
+    youtubeUrlInput.addEventListener('input', function () {
+        const url = this.value.trim();
+        if (!url) {
+            youtubePreview.style.display = 'none';
+            return;
+        }
+
+        const videoId = extractYoutubeVideoId(url);
+        if (videoId) {
+            // youtube-nocookie.comを使用
+            youtubeIframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`;
+            youtubePreview.style.display = 'block';
+        } else {
+            youtubePreview.style.display = 'none';
+        }
+    });
+
+    function extractYoutubeVideoId(url) {
+        const patterns = [
+            /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/,
+            /(?:https?:\/\/)?(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]+)/,
+            /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([a-zA-Z0-9_-]+)/
+        ];
+
+        for (let pattern of patterns) {
+            const match = url.match(pattern);
+            if (match && match[1]) {
+                return match[1];
+            }
+        }
+        return null;
     }
 
     document.getElementById('uploadForm').addEventListener('submit', function (e) {

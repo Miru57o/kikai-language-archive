@@ -37,6 +37,31 @@
         background: #fff3e0;
         color: #f57c00;
     }
+
+    .media-preview {
+        height: 200px;
+        overflow: hidden;
+        position: relative;
+        background: #f8f9fa;
+    }
+
+    .youtube-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(255, 0, 0, 0.9);
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        z-index: 10;
+    }
+
+    .youtube-embed {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
 </style>
 {% endblock %}
 
@@ -96,18 +121,27 @@
         <div class="col-md-6 col-lg-4 mb-4">
             <div class="card record-card">
                 <!-- メディアプレビュー -->
-                <div class="media-preview" style="height: 200px; overflow: hidden; position: relative;">
-                    {% if geo.content_type == 'drone_photo' or geo.content_type == 'other' %}
+                <div class="media-preview">
+                    {% if geo.youtube_url %}
+                    <!-- YouTube動画の場合 -->
+                    <span class="youtube-badge">
+                        <i class="fab fa-youtube"></i> YouTube
+                    </span>
+                    <iframe class="youtube-embed" src="{{ geo.get_youtube_embed_url }}" title="{{ geo.title }}"
+                        frameborder="0" loading="lazy"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        referrerpolicy="strict-origin-when-cross-origin" allowfullscreen>
+                    </iframe>
+                    {% elif geo.content_type == 'drone_photo' or geo.content_type == 'other' %}
                     <!-- 画像の場合 -->
                     <img src="{{ geo.file_path }}" class="card-img-top" alt="{{ geo.title }}"
                         style="height: 100%; width: 100%; object-fit: cover;">
                     {% elif geo.content_type == 'drone_video' %}
-                    <!-- 動画の場合 -->
+                    <!-- Supabaseの動画の場合 -->
                     {% if geo.thumbnail_path %}
                     <img src="{{ geo.thumbnail_path }}" class="card-img-top" alt="{{ geo.title }}"
                         style="height: 100%; width: 100%; object-fit: cover;">
                     {% else %}
-                    <!-- サムネイルがない場合は動画を直接表示 -->
                     <video class="card-img-top" style="height: 100%; width: 100%; object-fit: cover;" muted
                         preload="metadata" playsinline autoplay loop>
                         <source src="{{ geo.file_path }}">
@@ -148,9 +182,17 @@
                         </small>
                     </div>
 
-                    <a href="{{ geo.file_path }}" target="_blank" class="btn btn-primary w-100">
+                    {% if geo.youtube_url %}
+                    <a href="{{ geo.youtube_url }}" target="_blank" rel="noopener noreferrer"
+                        class="btn btn-danger w-100">
+                        <i class="fab fa-youtube"></i> YouTubeで開く
+                    </a>
+                    {% else %}
+                    <a href="{{ geo.file_path }}" target="_blank" rel="noopener noreferrer"
+                        class="btn btn-primary w-100">
                         <i class="fas fa-external-link-alt"></i> 表示
                     </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
