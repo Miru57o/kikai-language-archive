@@ -1,14 +1,14 @@
 # language_archive/views.py
 
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse, HttpResponse, StreamingHttpResponse
+from django.http import HttpResponse, StreamingHttpResponse
 from django.contrib import messages
 from django.db.models.functions import TruncYear
 from django.db.models import Count, Q
 from .models import LanguageRecord, GeographicRecord, Village, OnomatopoeiaType, Speaker
 from .forms import LanguageRecordForm, GeographicRecordForm
 from .services import upload_to_supabase, get_bucket_name, create_archive_map
-from .utils import reverse_geocode, format_record_for_api
+from .utils import reverse_geocode
 import requests
 import urllib.parse
 import os
@@ -252,34 +252,4 @@ def speaker_records(request, speaker_id):
     }
     return render(request, 'language_archive/speaker_records.html', context)
 
-
-def get_village_records_api(request, village_id):
-    """集落の言語記録を取得するAPI"""
-    records = LanguageRecord.objects.filter(speaker__village_id=village_id).select_related(
-        'speaker', 'onomatopoeia_type'
-    )
-    
-    data = [format_record_for_api(record) for record in records]
-    return JsonResponse(data, safe=False)
-
-
-def search_records(request):
-    """言語記録の検索"""
-    query = request.GET.get('q', '')
-    records = LanguageRecord.objects.select_related(
-        'speaker', 'village', 'onomatopoeia_type'
-    )
-    
-    if query:
-        records = records.filter(
-            Q(onomatopoeia_text__icontains=query) |
-            Q(meaning__icontains=query) |
-            Q(title__icontains=query)
-        )
-    
-    context = {
-        'records': records,
-        'query': query,
-    }
-    return render(request, 'language_archive/search_results.html', context)
 

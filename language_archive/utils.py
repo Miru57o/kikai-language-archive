@@ -84,38 +84,3 @@ def format_speaker_info(speaker):
         'village': speaker.village.name if speaker.village else '不明',
         'language_frequency': speaker.get_language_frequency_display(),
     }
-
-
-def format_record_for_api(record):
-    """
-    言語記録データをAPI用に整形
-    
-    Args:
-        record: LanguageRecordモデルのインスタンス
-    
-    Returns:
-        API用に整形されたデータ辞書
-    """
-    return {
-        'id': record.id,
-        'title': record.title,
-        'onomatopoeia': record.onomatopoeia_text,
-        'meaning': record.meaning,
-        'usage_example': record.usage_example,
-        'phonetic_notation': record.phonetic_notation,
-        'file_type': record.file_type,
-        'file_path': record.file_path,
-        'thumbnail_path': record.thumbnail_path,
-        'speaker': format_speaker_info(record.speaker),
-        'village': {
-            'id': record.village.id if record.village else None,
-            'name': record.village.name if record.village else '不明',
-        },
-        'type': {
-            'code': record.onomatopoeia_type.type_code if record.onomatopoeia_type else None,
-            'name': record.onomatopoeia_type.type_name if record.onomatopoeia_type else None,
-            'description': record.onomatopoeia_type.description if record.onomatopoeia_type else None,
-        },
-        'recorded_date': record.recorded_date.strftime('%Y年%m月%d日'),
-        'notes': record.notes,
-    }

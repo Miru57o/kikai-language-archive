@@ -26,23 +26,18 @@ def upload_to_supabase(file, bucket_name, file_prefix=""):
     
     if not supabase_url or not supabase_key:
         raise Exception("Supabase環境変数が設定されていません")
-    
+
     # ユニークなファイル名を生成 (タイムスタンプ + ランダム文字列)
     extension = Path(file.name).suffix
-
     # タイムスタンプ文字列 (例: 20251030134530)
     timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-    
     # ランダムな文字列 
     alphabet = string.ascii_letters + string.digits
     random_str = ''.join(secrets.choice(alphabet) for i in range(6))
-    
     # ベースとなるファイル名を結合 
     base_file_name = f"{timestamp}_{random_str}{extension}"
-    
     # プレフィックスと結合
     storage_file_name = f"{file_prefix}{base_file_name}"
-    
     # ファイルをアップロード
     file_bytes = file.read()
 
@@ -207,4 +202,4 @@ def create_archive_map(geographic_records, speakers):
     map_html = m._repr_html_()
     map_html = map_html.replace('<div class="folium-map"', '<div class="folium-map" id="map"')
     
-    return map_html
+    return map_html 
