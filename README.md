@@ -255,11 +255,3 @@ Supabaseの環境変数が正しく設定されているか確認してくださ
 - `SUPABASE_SERVICE_ROLE_KEY`
 
 また、Storageバケットが作成され、パブリックアクセスが有効になっているか確認してください。
-
-### 静的ファイルが表示されない
-
-```bash
-python manage.py collectstatic --no-input
-```
-
-を実行して静的ファイルを収集してください。
