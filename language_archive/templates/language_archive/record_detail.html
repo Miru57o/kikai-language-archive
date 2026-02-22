@@ -1,6 +1,6 @@
 {% extends 'language_archive/base.html' %}
 
-{% block title %}{{ record.onomatopoeia_text }} - 言語記録詳細{% endblock %}
+{% block title %}{{ record.display_title }} - 言語記録詳細{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -38,6 +38,24 @@
         color: var(--primary-color);
         margin-bottom: 0.5rem;
     }
+
+    .youtube-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(255, 0, 0, 0.9);
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        z-index: 10;
+    }
+
+    .youtube-embed {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
 </style>
 {% endblock %}
 
@@ -58,7 +76,7 @@
                         </a>
                     </li>
                     <li class="breadcrumb-item active">
-                        {{ record.onomatopoeia_text }}
+                        {{ record.display_title }}
                     </li>
                 </ol>
             </nav>
@@ -69,10 +87,16 @@
         <div class="col-lg-8">
             <div class="detail-card card mb-4">
                 <div class="card-body">
-                    <h1 class="mb-4">{{ record.onomatopoeia_text }}</h1>
+                    <h1 class="mb-4">{{ record.display_title }}</h1>
 
                     <div class="media-container text-center">
-                        {% if record.file_type == 'audio' %}
+                        {% if record.youtube_url and record.get_youtube_embed_url %}
+                        <div class="position-relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                            <iframe class="youtube-embed position-absolute top-0 start-0 w-100 h-100" src="{{ record.get_youtube_embed_url }}" title="{{ record.display_title }}"
+                                frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen>
+                            </iframe>
+                        </div>
+                        {% elif record.file_type == 'audio' %}
                         <audio controls class="mb-2" preload="metadata">
                             <source src="{{ record.file_path }}">
                             お使いのブラウザは audio タグに対応していません。
@@ -83,24 +107,37 @@
                             お使いのブラウザは video タグに対応していません。
                         </video>
                         {% elif record.file_type == 'image' %}
-                        <img src="{{ record.file_path }}" alt="{{ record.onomatopoeia_text }}" style="cursor: pointer;">
+                        <img src="{{ record.file_path }}" alt="{{ record.display_title }}" style="cursor: pointer;">
                         {% endif %}
                     </div>
 
+                    {% if record.youtube_url and record.description %}
+                    <div class="info-section">
+                        <div class="info-label">説明</div>
+                        <p class="mb-0">{{ record.description }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if record.meaning is not None and record.meaning != "" %}
                     <div class="info-section">
                         <div class="info-label">意味</div>
                         <p class="mb-0">{{ record.meaning }}</p>
                     </div>
+                    {% endif %}
 
+                    {% if record.usage_example is not None and record.usage_example != "" %}
                     <div class="info-section">
                         <div class="info-label">用例</div>
                         <p class="mb-0">{{ record.usage_example }}</p>
                     </div>
+                    {% endif %}
 
+                    {% if record.language_frequency %}
                     <div class="info-section">
                         <div class="info-label">この記録での言語使用頻度</div>
                         <p class="mb-0">{{ record.get_language_frequency_display }}</p>
                     </div>
+                    {% endif %}
 
                     {% if record.phonetic_notation %}
                     <div class="info-section">

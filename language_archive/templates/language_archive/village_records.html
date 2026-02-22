@@ -2,6 +2,61 @@
 
 {% block title %}{{ village.name }}の言語記録 - 喜界島言語アーカイブ{% endblock %}
 
+{% block extra_css %}
+<style>
+    .record-card {
+        height: 100%;
+    }
+
+    .file-type-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .badge-audio {
+        background: #e3f2fd;
+        color: #1976d2;
+    }
+
+    .badge-video {
+        background: #ffebee;
+        color: #d32f2f;
+    }
+
+    .badge-image {
+        background: #e8f5e9;
+        color: #388e3c;
+    }
+
+    .media-preview {
+        height: 200px;
+        overflow: hidden;
+        position: relative;
+        background: #f8f9fa;
+    }
+
+    .youtube-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(255, 0, 0, 0.9);
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        z-index: 10;
+    }
+
+    .youtube-embed {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container">
     <div class="row mb-4">
@@ -48,7 +103,7 @@
                         <div class="col-md-6">
                             <div class="d-flex align-items-center h-100">
                                 <p class="mb-0 me-4"> <strong>言語記録数:</strong>
-                                    {{records|length }}件
+                                    {{ paginator.count }}件
                                 </p>
                                 <a href="{% url 'map_view' %}" class="btn btn-outline-primary">
                                     地図に戻る
@@ -70,12 +125,50 @@
     <div class="row">
         {% for record in records %}
         <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card h-100">
+            <div class="card record-card h-100">
+                <!-- メディアプレビュー -->
+                <div class="media-preview">
+                    {% if record.youtube_url and record.get_youtube_embed_url %}
+                    <span class="youtube-badge">
+                        <i class="fab fa-youtube"></i> YouTube
+                    </span>
+                    <iframe class="youtube-embed" src="{{ record.get_youtube_embed_url }}" title="{{ record.display_title }}"
+                        frameborder="0" loading="lazy"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        referrerpolicy="strict-origin-when-cross-origin" allowfullscreen>
+                    </iframe>
+                    {% elif record.file_type == 'image' and record.file_path %}
+                    <img src="{{ record.file_path }}" class="card-img-top" alt="{{ record.display_title }}"
+                        style="height: 100%; width: 100%; object-fit: cover;">
+                    {% elif record.file_type == 'video' %}
+                    {% if record.thumbnail_path %}
+                    <img src="{{ record.thumbnail_path }}" class="card-img-top" alt="{{ record.display_title }}"
+                        style="height: 100%; width: 100%; object-fit: cover;">
+                    {% elif record.file_path %}
+                    <video class="card-img-top" style="height: 100%; width: 100%; object-fit: cover;" muted
+                        preload="metadata" playsinline>
+                        <source src="{{ record.file_path }}">
+                    </video>
+                    {% else %}
+                    <div class="d-flex align-items-center justify-content-center h-100 text-muted">
+                        <i class="fas fa-video fa-3x"></i>
+                    </div>
+                    {% endif %}
+                    {% elif record.file_type == 'audio' %}
+                    <div class="d-flex align-items-center justify-content-center h-100 text-muted">
+                        <i class="fas fa-volume-up fa-3x"></i>
+                    </div>
+                    {% else %}
+                    <div class="d-flex align-items-center justify-content-center h-100 text-muted">
+                        <i class="fas fa-file fa-3x"></i>
+                    </div>
+                    {% endif %}
+                </div>
+
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h5 class="card-title mb-0">{{ record.onomatopoeia_text }}</h5>
-                        <span
-                            class="badge bg-{% if record.file_type == 'audio' %}primary{% elif record.file_type == 'video' %}danger{% else %}success{% endif %}">
+                        <h5 class="card-title mb-0">{{ record.display_title }}</h5>
+                        <span class="file-type-badge badge-{{ record.file_type }}">
                             {% if record.file_type == 'audio' %}
                             <i class="fas fa-volume-up"></i> 音声
                             {% elif record.file_type == 'video' %}
@@ -86,14 +179,22 @@
                         </span>
                     </div>
 
-
                     <p class="card-text">
-                        <strong>意味:</strong> {{ record.meaning|truncatewords:10 }}
+                        {% if record.youtube_url %}
+                        <strong>説明:</strong> {{ record.description|truncatewords:10|default:"" }}
+                        {% else %}
+                        <strong>意味:</strong> {{ record.meaning|truncatewords:10|default:"" }}
+                        {% endif %}
                     </p>
 
                     {% if record.onomatopoeia_type %}
                     <p class="card-text">
-                        <strong>型:</strong> {{ record.onomatopoeia_type.type_code }}
+                        <strong>
+                            <span class="tooltip-term" data-tooltip="{{ record.onomatopoeia_type.description }}">
+                                型:
+                            </span>
+                        </strong>
+                        {{ record.onomatopoeia_type.type_code }}
                     </p>
                     {% endif %}
 
@@ -112,14 +213,46 @@
                         </small>
                     </div>
 
+                    {% if record.youtube_url %}
+                    <a href="{{ record.youtube_url }}" target="_blank" rel="noopener noreferrer"
+                        class="btn btn-danger w-100">
+                        <i class="fab fa-youtube"></i> YouTubeで開く
+                    </a>
+                    {% else %}
                     <a href="{% url 'record_detail' record.id %}" class="btn btn-primary w-100">
                         <i class="fas fa-arrow-right"></i> 詳細を見る
                     </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
         {% endfor %}
     </div>
+
+    {% if paginator.num_pages > 1 %}
+    <nav aria-label="ページネーション" class="mt-4">
+        <ul class="pagination justify-content-center flex-wrap">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?{% if pagination_query %}{{ pagination_query }}&{% endif %}page={{ page_obj.previous_page_number }}"><i class="fas fa-chevron-left"></i> 前へ</a>
+            </li>
+            {% endif %}
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active" aria-current="page"><span class="page-link">{{ num }}</span></li>
+            {% else %}
+            <li class="page-item"><a class="page-link" href="?{% if pagination_query %}{{ pagination_query }}&{% endif %}page={{ num }}">{{ num }}</a></li>
+            {% endif %}
+            {% endfor %}
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?{% if pagination_query %}{{ pagination_query }}&{% endif %}page={{ page_obj.next_page_number }}">次へ <i class="fas fa-chevron-right"></i></a>
+            </li>
+            {% endif %}
+        </ul>
+        <p class="text-center text-muted small">全 {{ paginator.count }} 件（{{ page_obj.start_index }}-{{ page_obj.end_index }} 件目を表示）</p>
+    </nav>
+    {% endif %}
     {% else %}
     <div class="row mt-5">
         <div class="col-12">

@@ -3,6 +3,7 @@
 
 from django.db import models
 from django.utils import timezone
+import re
 
 class Village(models.Model):
     """集落情報テーブル"""
@@ -82,24 +83,27 @@ class LanguageRecord(models.Model):
         ('sometimes', 'たまに使用'),
         ('rarely', 'ほとんど使用しない'),
     ]
-    # 基本情報
-    onomatopoeia_text = models.CharField(max_length=100, verbose_name="オノマトペ")
-    meaning = models.TextField(verbose_name="意味")
-    usage_example = models.TextField(verbose_name="用例")
-    phonetic_notation = models.TextField(blank=True, verbose_name="音声記号")
-    language_frequency = models.CharField(blank=True, default='', max_length=20, choices=FREQUENCY_CHOICES, verbose_name="言語使用頻度")
+    # 基本情報（YouTubeのみの場合は null 可）
+    onomatopoeia_text = models.CharField(max_length=100, blank=True, null=True, verbose_name="オノマトペ")
+    meaning = models.TextField(blank=True, null=True, verbose_name="意味")
+    usage_example = models.TextField(blank=True, null=True, verbose_name="用例")
+    phonetic_notation = models.TextField(blank=True, null=True, verbose_name="音声記号")
+    language_frequency = models.CharField(blank=True, default='', max_length=20, choices=FREQUENCY_CHOICES, null=True, verbose_name="言語使用頻度")
     
     # ファイル情報
     file_type = models.CharField(max_length=10, choices=FILE_TYPE_CHOICES, verbose_name="ファイル種類")
     file_path = models.URLField(max_length=1024, null=True, blank=True, verbose_name="ファイルURL")
     thumbnail_path = models.URLField(max_length=1024, blank=True, verbose_name="サムネイルURL")
+    youtube_url = models.URLField(max_length=1024, blank=True, null=True, verbose_name="YouTube URL")
     
     # 関連情報
     speaker = models.ForeignKey(Speaker, on_delete=models.PROTECT, null=True, blank=True, verbose_name="話者")
     onomatopoeia_type = models.ForeignKey(OnomatopoeiaType, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="型")
     village = models.ForeignKey(Village, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="関連集落")
     
-    # メタデータ
+    # メタデータ（YouTube の場合は title / description を使用）
+    title = models.CharField(max_length=200, blank=True, null=True, verbose_name="タイトル")
+    description = models.TextField(blank=True, null=True, verbose_name="説明")
     recorded_date = models.DateField(verbose_name="収録日")
     created_at = models.DateTimeField(default=timezone.now, verbose_name="登録日時")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="更新日時")
@@ -111,7 +115,30 @@ class LanguageRecord(models.Model):
         ordering = ['-recorded_date']
     
     def __str__(self):
-        return f"{self.onomatopoeia_text}"
+        if self.youtube_url and self.title:
+            return self.title
+        if self.onomatopoeia_text:
+            return self.onomatopoeia_text
+        return f"記録 #{self.pk}"
+
+    @property
+    def display_title(self):
+        """一覧・詳細で表示するタイトル（YouTube の場合は title、それ以外は onomatopoeia_text）"""
+        if self.youtube_url and self.title:
+            return self.title
+        return self.onomatopoeia_text or ""
+    
+    def get_youtube_embed_url(self):
+        """
+        get_youtube_embed_url の Docstring
+        
+        :param self: 説明
+        """
+        if self.youtube_url:
+            match = re.search(r'(?:v=|youtu\.be/)([^&]+)', self.youtube_url)
+            if match:
+                return f"https://www.youtube.com/embed/{match.group(1)}"
+        return None
 
 
 class GeographicRecord(models.Model):
@@ -148,8 +175,6 @@ class GeographicRecord(models.Model):
         """YouTube URLを埋め込み用URLに変換"""
         if not self.youtube_url:
             return None
-        
-        import re
         patterns = [
             r'(?:https?://)?(?:www\.)?youtube\.com/watch\?v=([a-zA-Z0-9_-]+)', # Standard URL
             r'(?:https?://)?(?:www\.)?youtu\.be/([a-zA-Z0-9_-]+)', # Shortened URL

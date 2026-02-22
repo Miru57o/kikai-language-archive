@@ -335,12 +335,6 @@
         return null;
     }
 
-    document.getElementById('uploadForm').addEventListener('submit', function (e) {
-        const btn = this.querySelector('button[type="submit"]');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>アップロード中...';
-    });
-
     document.getElementById('getCurrentLocation').addEventListener('click', function () {
         if (navigator.geolocation) {
             this.disabled = true;
@@ -376,5 +370,11 @@
             }
         });
     }
+
+    document.getElementById('uploadForm').addEventListener('submit', function (e) {
+        const btn = this.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>アップロード中...';
+    });
 </script>
 {% endblock %}

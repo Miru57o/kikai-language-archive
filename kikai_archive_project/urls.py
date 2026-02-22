@@ -36,7 +36,6 @@ urlpatterns = [
     path('records/', views.record_list, name='record_list'),
     path('records/<int:record_id>/', views.record_detail, name='record_detail'),
     path('records/upload/', views.upload_language_record, name='upload_language_record'),
-    path('records/search/', views.search_records, name='search_records'),
     
     # 地理環境データ
     path('geographic/', views.geographic_list, name='geographic_list'),
@@ -47,9 +46,6 @@ urlpatterns = [
     
     # 話者関連
     path('speaker/<int:speaker_id>/records/', views.speaker_records, name='speaker_records'),
-    
-    # API
-    path('api/village/<int:village_id>/records/', views.get_village_records_api, name='api_village_records'),
 ]
 # 開発環境でのメディアファイル配信
 if settings.DEBUG:

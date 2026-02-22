@@ -5,7 +5,15 @@ from .models import LanguageRecord, GeographicRecord, Speaker, Village
 
 class LanguageRecordForm(forms.ModelForm):
     """言語記録アップロードフォーム"""
-    file = forms.FileField(label="ファイル", required=True)
+    file = forms.FileField(label="ファイル", required=False)
+    youtube_url = forms.URLField(
+        label="YouTube URL", 
+        required=False,
+        widget=forms.URLInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'https://www.youtube.com/watch?v=...'
+        })
+    )
 
 # --- カスタム初期化メソッドで必須Selectフィールドの設定 ---
     def __init__(self, *args, **kwargs):
@@ -16,42 +24,71 @@ class LanguageRecordForm(forms.ModelForm):
         self.fields['file_type'].choices = file_type_choices
         self.fields['file_type'].widget.attrs['required'] = True
 
-        #language_frequency (必須)
-        freq_choices = [("", "言語使用頻度を選択")] + list(LanguageRecord.FREQUENCY_CHOICES)
-        self.fields['language_frequency'].choices = freq_choices
-        self.fields['language_frequency'].widget.attrs['required'] = True
+        #language_frequency (未選択を選択肢に追加)
+        self.fields['language_frequency'].choices = LanguageRecord.FREQUENCY_CHOICES
+        self.fields['language_frequency'].required = False
 
-        # speaker (モデルでは任意だが、フォームでは必須)
+        # speaker (必須)
         self.fields['speaker'].required = True
         self.fields['speaker'].empty_label = "話者を選択"
         self.fields['speaker'].widget.attrs['required'] = True
 
-        # onomatopoeia_type (モデルでは任意だが、フォームでは必須)
-        self.fields['onomatopoeia_type'].required = True
+        # 言語項目は YouTube の場合は任意のため、required は clean で判定
+        self.fields['onomatopoeia_text'].required = False
+        self.fields['meaning'].required = False
+        self.fields['usage_example'].required = False
+        self.fields['onomatopoeia_type'].required = False
         self.fields['onomatopoeia_type'].empty_label = "オノマトペ型を選択"
-        self.fields['onomatopoeia_type'].widget.attrs['required'] = True
 
-#サーバーサイドでのバリテーション
-    def clean_file(self):
-        data = self.cleaned_data.get('file_type')
-        if not data:
-            raise forms.ValidationError("ファイルを選択してください。")
-        return data
+    # サーバーサイドでのバリデーション
+    def clean(self):
+        cleaned_data = super().clean()
+        file = cleaned_data.get('file')
+        youtube_url = cleaned_data.get('youtube_url')
 
-    def clean_language_frequency(self):
-        data = self.cleaned_data.get('language_frequency')
-        if not data:
-            raise forms.ValidationError("言語使用頻度を選択してください。")
-        return data
+        # ファイルまたはYouTube URLのどちらかが必須
+        if not file and not youtube_url:
+            raise forms.ValidationError("ファイルまたはYouTube URLのいずれかを入力してください。")
+
+        # 両方入力されている場合はエラー
+        if file and youtube_url:
+            raise forms.ValidationError("ファイルとYouTube URLの両方は指定できません。どちらか一方を選択してください。")
+
+        # YouTube の場合はタイトル必須・言語項目は任意
+        if youtube_url:
+            if not cleaned_data.get('title') or not str(cleaned_data.get('title')).strip():
+                raise forms.ValidationError("YouTube で登録する場合は「タイトル」を入力してください。")
+        else:
+            # ファイルの場合は言語項目必須
+            if not cleaned_data.get('onomatopoeia_text') or not str(cleaned_data.get('onomatopoeia_text')).strip():
+                raise forms.ValidationError("オノマトペを入力してください。")
+            if not cleaned_data.get('meaning') or not str(cleaned_data.get('meaning')).strip():
+                raise forms.ValidationError("意味を入力してください。")
+            if not cleaned_data.get('usage_example') or not str(cleaned_data.get('usage_example')).strip():
+                raise forms.ValidationError("用例を入力してください。")
+            if not cleaned_data.get('onomatopoeia_type'):
+                raise forms.ValidationError("オノマトペ型を選択してください。")
+
+        return cleaned_data
 
     class Meta:
         model = LanguageRecord
         fields = [
             'onomatopoeia_text', 'meaning', 'usage_example',
-            'phonetic_notation', 'language_frequency','file_type', 'speaker',
-            'onomatopoeia_type', 'recorded_date', 'notes'
+            'phonetic_notation', 'language_frequency', 'file_type', 'speaker',
+            'onomatopoeia_type', 'recorded_date', 'notes', 'youtube_url',
+            'title', 'description'
         ]
         widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'タイトル（YouTube の場合は必須）'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': '説明（YouTube の場合は任意）'
+            }),
             'onomatopoeia_text': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'オノマトペを入力'

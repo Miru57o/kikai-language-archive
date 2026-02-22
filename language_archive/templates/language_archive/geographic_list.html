@@ -111,7 +111,7 @@
         <div class="col-12">
             <div class="alert alert-info">
                 <i class="fas fa-info-circle"></i>
-                <strong>{{ geo_records|length }}</strong> 件の地理環境データが見つかりました
+                <strong>{{ paginator.count }}</strong> 件の地理環境データが見つかりました
             </div>
         </div>
     </div>
@@ -205,6 +205,31 @@
         </div>
         {% endfor %}
     </div>
+
+    {% if paginator.num_pages > 1 %}
+    <nav aria-label="ページネーション" class="mt-4">
+        <ul class="pagination justify-content-center flex-wrap">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?{% if pagination_query %}{{ pagination_query }}&{% endif %}page={{ page_obj.previous_page_number }}"><i class="fas fa-chevron-left"></i> 前へ</a>
+            </li>
+            {% endif %}
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active" aria-current="page"><span class="page-link">{{ num }}</span></li>
+            {% else %}
+            <li class="page-item"><a class="page-link" href="?{% if pagination_query %}{{ pagination_query }}&{% endif %}page={{ num }}">{{ num }}</a></li>
+            {% endif %}
+            {% endfor %}
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?{% if pagination_query %}{{ pagination_query }}&{% endif %}page={{ page_obj.next_page_number }}">次へ <i class="fas fa-chevron-right"></i></a>
+            </li>
+            {% endif %}
+        </ul>
+        <p class="text-center text-muted small">全 {{ paginator.count }} 件（{{ page_obj.start_index }}-{{ page_obj.end_index }} 件目を表示）</p>
+    </nav>
+    {% endif %}
 </div>
 
 <script>
