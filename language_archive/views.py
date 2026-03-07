@@ -9,7 +9,7 @@ from .forms import LanguageRecordForm, GeographicRecordForm
 from .services import upload_to_supabase, get_bucket_name, create_archive_map
 
 # 一覧ページの1ページあたりの件数
-PAGINATE_BY = 12
+PAGINATE_BY = 6
 
 
 def _pagination_query(request):

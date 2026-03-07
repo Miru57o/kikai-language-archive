@@ -130,14 +130,22 @@ class LanguageRecord(models.Model):
     
     def get_youtube_embed_url(self):
         """
-        get_youtube_embed_url の Docstring
-        
-        :param self: 説明
+        YouTube URL を埋め込み用 URL に変換する。
+        通常・限定公開・共有リンク（watch?v=, youtu.be/, /embed/）いずれにも対応。
         """
-        if self.youtube_url:
-            match = re.search(r'(?:v=|youtu\.be/)([^&]+)', self.youtube_url)
+        if not self.youtube_url:
+            return None
+        # 複数形式に対応（限定公開・共有リンクも同じURL形式のためそのまま利用可能）
+        patterns = [
+            r'(?:https?://)?(?:www\.)?youtube\.com/watch\?v=([a-zA-Z0-9_-]+)',  # watch?v=VIDEO_ID
+            r'(?:https?://)?(?:www\.)?youtu\.be/([a-zA-Z0-9_-]+)(?:\?|$)',      # youtu.be/VIDEO_ID（?以降は除外）
+            r'(?:https?://)?(?:www\.)?youtube\.com/embed/([a-zA-Z0-9_-]+)',      # embed
+        ]
+        for pattern in patterns:
+            match = re.search(pattern, self.youtube_url)
             if match:
-                return f"https://www.youtube.com/embed/{match.group(1)}"
+                video_id = match.group(1)
+                return f"https://www.youtube-nocookie.com/embed/{video_id}?rel=0&modestbranding=1"
         return None
 
 
@@ -172,19 +180,20 @@ class GeographicRecord(models.Model):
         return self.title
     
     def get_youtube_embed_url(self):
-        """YouTube URLを埋め込み用URLに変換"""
+        """
+        YouTube URL を埋め込み用 URL に変換する。
+        通常・限定公開・共有リンク（watch?v=, youtu.be/, /embed/）いずれにも対応。
+        """
         if not self.youtube_url:
             return None
         patterns = [
-            r'(?:https?://)?(?:www\.)?youtube\.com/watch\?v=([a-zA-Z0-9_-]+)', # Standard URL
-            r'(?:https?://)?(?:www\.)?youtu\.be/([a-zA-Z0-9_-]+)', # Shortened URL
-            r'(?:https?://)?(?:www\.)?youtube\.com/embed/([a-zA-Z0-9_-]+)', # Embed URL
+            r'(?:https?://)?(?:www\.)?youtube\.com/watch\?v=([a-zA-Z0-9_-]+)',   # 通常・限定公開
+            r'(?:https?://)?(?:www\.)?youtu\.be/([a-zA-Z0-9_-]+)(?:\?|$)',      # 短縮リンク（?以降は除外）
+            r'(?:https?://)?(?:www\.)?youtube\.com/embed/([a-zA-Z0-9_-]+)',       # 埋め込みURL
         ]
-        
         for pattern in patterns:
             match = re.search(pattern, self.youtube_url)
             if match:
                 video_id = match.group(1)
                 return f"https://www.youtube-nocookie.com/embed/{video_id}?rel=0&modestbranding=1"
-        
         return None
